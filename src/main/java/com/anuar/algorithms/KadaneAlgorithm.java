@@ -52,9 +52,8 @@ public class KadaneAlgorithm {
         return new Result(maxSoFar, start, end);
     }
 
-    /**
-     * Simple result record for Kadane's algorithm.
-     */
+
+     // Simple result record for Kadane's algorithm.
     public static class Result {
         private final int maxSum;
         private final int startIndex;
