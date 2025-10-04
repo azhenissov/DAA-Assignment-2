@@ -31,17 +31,26 @@ public class KadaneAlgorithm {
         }
     }
 
-    /**
-     * Optimized Kadane’s Algorithm with:
-     *  - cached element access to reduce array indexing
-     *  - early exit for all-negative arrays
-     */
+//      Kadane’s Algorithm with:
+//       - cached element access to reduce array indexing
+//       - early exit for all-negative arrays
+//       - edge-case handling for empty and single-element arrays
+
     public Result findMaxSubarray(int[] arr) {
         if (arr == null) {
             throw new IllegalArgumentException("Input array cannot be null");
         }
+
+        // Edge case: empty array
         if (arr.length == 0) {
-            throw new IllegalArgumentException("Input array cannot be empty");
+            return new Result(0, -1, -1); // convention: no subarray
+        }
+
+        //  Edge case: single element
+        if (arr.length == 1) {
+            metrics.incrementArrayAccesses();
+            metrics.incrementMemoryAllocations();
+            return new Result(arr[0], 0, 0);
         }
 
         metrics.incrementMemoryAllocations(); // for result object later
@@ -91,7 +100,7 @@ public class KadaneAlgorithm {
         return new Result(maxSoFar, start, end);
     }
 
-    /** Helper: find index of an element (used for all-negative case) */
+    // Helper: find index of an element (used for all-negative case)
     private int indexOf(int[] arr, int target) {
         for (int i = 0; i < arr.length; i++) {
             metrics.incrementArrayAccesses();
