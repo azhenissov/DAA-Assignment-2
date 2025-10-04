@@ -10,50 +10,6 @@ public class KadaneAlgorithm {
         this.metrics = metrics;
     }
 
-    /**
-     * Finds maximum subarray sum using Kadane's Algorithm.
-     * Tracks positions of the subarray as well.
-     *
-     * @param arr input array of integers
-     * @return result object containing max sum and subarray indices
-     */
-    public Result findMaxSubarray(int[] arr) {
-        if (arr == null || arr.length == 0) {
-            throw new IllegalArgumentException("Array must not be null or empty");
-        }
-
-        int maxSoFar = arr[0];
-        int maxEndingHere = arr[0];
-        int start = 0, end = 0, tempStart = 0;
-
-        // Metrics: 2 array accesses for arr[0]
-        metrics.incrementArrayAccesses();
-        metrics.incrementArrayAccesses();
-
-        for (int i = 1; i < arr.length; i++) {
-            metrics.incrementComparisons();
-            metrics.incrementArrayAccesses(); // arr[i]
-
-            if (arr[i] > maxEndingHere + arr[i]) {
-                maxEndingHere = arr[i];
-                tempStart = i;
-            } else {
-                maxEndingHere = maxEndingHere + arr[i];
-            }
-
-            metrics.incrementComparisons();
-            if (maxEndingHere > maxSoFar) {
-                maxSoFar = maxEndingHere;
-                start = tempStart;
-                end = i;
-            }
-        }
-
-        return new Result(maxSoFar, start, end);
-    }
-
-
-     // Simple result record for Kadane's algorithm.
     public static class Result {
         private final int maxSum;
         private final int startIndex;
@@ -65,21 +21,85 @@ public class KadaneAlgorithm {
             this.endIndex = endIndex;
         }
 
-        public int getMaxSum() {
-            return maxSum;
-        }
-
-        public int getStartIndex() {
-            return startIndex;
-        }
-
-        public int getEndIndex() {
-            return endIndex;
-        }
+        public int getMaxSum() { return maxSum; }
+        public int getStartIndex() { return startIndex; }
+        public int getEndIndex() { return endIndex; }
 
         @Override
         public String toString() {
-            return String.format("MaxSum=%d, Range=[%d..%d]", maxSum, startIndex, endIndex);
+            return String.format("MaxSum=%d, Start=%d, End=%d", maxSum, startIndex, endIndex);
         }
+    }
+
+    /**
+     * Optimized Kadane’s Algorithm with:
+     *  - cached element access to reduce array indexing
+     *  - early exit for all-negative arrays
+     */
+    public Result findMaxSubarray(int[] arr) {
+        if (arr == null) {
+            throw new IllegalArgumentException("Input array cannot be null");
+        }
+        if (arr.length == 0) {
+            throw new IllegalArgumentException("Input array cannot be empty");
+        }
+
+        metrics.incrementMemoryAllocations(); // for result object later
+
+        int maxSoFar = arr[0];
+        int maxEndingHere = arr[0];
+        int start = 0, tempStart = 0, end = 0;
+
+        boolean hasPositive = arr[0] > 0;
+        int maxElement = arr[0];
+
+        // iterate from second element
+        for (int i = 1; i < arr.length; i++) {
+            metrics.incrementArrayAccesses();
+            int current = arr[i]; // cache current element
+
+            // Track if there's any positive element
+            if (current > 0) hasPositive = true;
+
+            // Track max element (for all-negative array case)
+            if (current > maxElement) {
+                maxElement = current;
+            }
+
+            metrics.incrementComparisons();
+            if (current > maxEndingHere + current) {
+                maxEndingHere = current;
+                tempStart = i;
+            } else {
+                maxEndingHere += current;
+            }
+
+            metrics.incrementComparisons();
+            if (maxEndingHere > maxSoFar) {
+                maxSoFar = maxEndingHere;
+                start = tempStart;
+                end = i;
+            }
+        }
+
+        // Early exit optimization: if no positive numbers exist, return max element only
+        if (!hasPositive) {
+            int index = indexOf(arr, maxElement);
+            return new Result(maxElement, index, index);
+        }
+
+        return new Result(maxSoFar, start, end);
+    }
+
+    /** Helper: find index of an element (used for all-negative case) */
+    private int indexOf(int[] arr, int target) {
+        for (int i = 0; i < arr.length; i++) {
+            metrics.incrementArrayAccesses();
+            metrics.incrementComparisons();
+            if (arr[i] == target) {
+                return i;
+            }
+        }
+        return -1; // should never happen
     }
 }
